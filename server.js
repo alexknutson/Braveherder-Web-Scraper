@@ -188,9 +188,10 @@ app.get('/scrapeQuests', function(req, res){
 					});
 				}
 				if (url_validated == true) {
-					fs.writeFile('world/' + total_counter + '.json', JSON.stringify(json, null, 4), function(err){
+					var random = Math.floor((Math.random() * 1000) + 1);;
+					fs.writeFile('world/' + random + '.json', JSON.stringify(json, null, 4), function(err){
 						console.log('File successfully written! - Check your project directory for the output.json file');
-						total_counter++;
+						//total_counter++;
 					})
 				}
 
