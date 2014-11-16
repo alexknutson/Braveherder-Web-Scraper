@@ -4,407 +4,216 @@ var request = require('request');
 var cheerio = require('cheerio');
 var app     = express();
 
-app.get('/scrape', function(req, res){
+app.get('/scrapeUnits', function(req, res){
 	// Let's scrape Anchorman 2
-	url = 'http://bravefrontierglobal.wikia.com/wiki/Tyrant_Lilly_Matah';
+	//	url = 'http://bravefrontierglobal.wikia.com/wiki/Rainbow_Angel_Yujeh';
+	//
+	//	request(url, function(error, response, html){
+	//		//console.log(response);
+	//		if(!error){
+	//			var $ = cheerio.load(html);
+	//
+	//			// HELPERS
+	//			var setUnitBBFill = function(div_text, row_type) {
+	//				if (row_type === 'bb') {
+	//					console.log('This is the BB row. Set the BB fill rate');
+	//					json.bb_fill = div_text;
+	//					delete row_type;
+	//				} else if (row_type === 'sbb') {
+	//					console.log('This is the BB row. Set the SBB fill rate');
+	//					// We need to do some more work to strip the undesired 'BC' text
+	//					json.sbb_fill = div_text;
+	//					delete row_type;
+	//				}
+	//			}
+	//
+	//			// Stats Header
+	//			var json = { name : "", character_id : "", element : "", rarity : "", max_lvl : "", cost : "", gender: "", hp_lord: "", atk_lord: "", def_lord: "", rec_lord: "", hp_anima: "", atk_anima: "", def_anima: "", rec_anima: "", hp_breaker: "", atk_breaker: "", def_breaker: "", rec_breaker: "", hp_guardian: "", atk_guardian: "", def_guardian: "", rec_guardian: "", hp_oracle: "", atk_oracle: "", def_oracle: "", rec_oracle: "", leader_skill_name: "", leader_skill: "",  bb_skill_name: "", bb_skill: "", sbb_skill_name: "", sbb_skill: "", bb_fill: "", sbb_fill: "", hits: "", };
+	//
+	//			var i=0;
+	//			var main_content = $(".article-table");
+	//			//console.log($(main_content).html());
+	//
+	//			$(main_content + ' div').each(function(){
+	//				i++;
+	//				var newID='menu'+i;
+	//				$(this).attr('id',newID);
+	//				$(this).val(i);
+	//			});
+	//
+	//
+	//
+	//		}
+	//
+	//		fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
+	//			console.log('File successfully written! - Check your project directory for the output.json file');
+	//		})
+	//
+	//		res.send(html)
+	//	})
+})
+
+app.get('/scrapeQuests', function(req, res){
+
+	url = 'http://bravefrontierglobal.wikia.com/wiki/Lizeria:Fire?action=render';
 
 	request(url, function(error, response, html){
+		//console.log(response);
 		if(!error){
 			var $ = cheerio.load(html);
 
-			// HELPERS
-			var setUnitBBFill = function(div_text, row_type) {
-				if (row_type === 'bb') {
-					console.log('This is the BB row. Set the BB fill rate');
-					json.bb_fill = div_text;
-					delete row_type;
-				} else if (row_type === 'sbb') {
-					console.log('This is the BB row. Set the SBB fill rate');
-					// We need to do some more work to strip the undesired 'BC' text
-					json.sbb_fill = div_text;
-					delete row_type;
-				}
-			}
-			// Unit Data Extraction
-			var justText = function(object, row_type) {
-				var table_data = $(object);
-				var clone = $(table_data).clone();
-				// If this has extra data, lets store it.
-				if ($(clone).find("span").attr('title')) {
-					//var title_data_array = [];
-					$(clone).find("span").each(function(){
-
-						// Exception for BB fill rates. Hopefully fill rate is the only div inside this TR
-						if (typeof row_type !== 'undefined') {
-							console.log(row_type);
-							setUnitBBFill($(clone).find('div').text(), row_type);
-						}
-						// Now that we have extracted the fill rate, 
-						// remove the div so it doesnt add the text to the skill description
-						$(clone).find('div').remove();
-
-						// Prepare the title to be injected into the skill description
-						var title_chunk = ' (' + $(this).attr('title') + ')';
-						//console.log(title_chunk);
-						if ($(this).attr('title')){
-							$(this).append(title_chunk);
-						}
-						//title_data_array.push($(this).attr('title'));
-					});
-
-					return $(clone)
-					.children("div")
-					.remove()
-					.end()
-					.text()
-					.trim();
-
-				} else {
-					// If not, trim as usual.
-					return $(object).clone()
-					.children("div")
-					.remove()
-					.end()
-					.text()
-					.trim();
-
-				}
-
-			};
 
 			// Stats Header
-			var json = { name : "", character_id : "", element : "", rarity : "", max_lvl : "", cost : "", gender: "", hp_lord: "", atk_lord: "", def_lord: "", rec_lord: "", hp_anima: "", atk_anima: "", def_anima: "", rec_anima: "", hp_breaker: "", atk_breaker: "", def_breaker: "", rec_breaker: "", hp_guardian: "", atk_guardian: "", def_guardian: "", rec_guardian: "", hp_oracle: "", atk_oracle: "", def_oracle: "", rec_oracle: "", leader_skill_name: "", leader_skill: "",  bb_skill_name: "", bb_skill: "", sbb_skill_name: "", sbb_skill: "", bb_fill: "", sbb_fill: "", };
+			var json = { name: "", levels: {} };
 
-			$('.article-table').each(function(index) {
-				// Left Sidebar Column
-				if (index == 0) {
-					console.log('Analyzing the first article-table for unit name, story, etc');
+			var $table = $('.article-table');
 
-					var left_column = $(this);
-					$(left_column).find('tr').each(function(index){
-						switch(index) {
-							case 0:
-								json.name = $(this).find('b').text().trim();
-								json.gender = $(this).find('div[title]').attr('title');
-								break;
-							case 1:
-								break;
-							case 2:
-								break;
-						}
-					});
+			// Quest Name
+			json.name = $table.find('span').first().text().trim();
 
+			var count = $table.children().length;
 
-				} else if (index == 1) {
+			// Find each quest level and assign a class to identify it.
+			$table.children().each(function(index) {
 
-					// Header Right Column.
-					console.log('Analyzing the second article-table for unit stats. This is the bulk of our data collection');
-					var article_table = $(this);
-
-					$(article_table).find('tr').each(function(index) {
-						// Switch for each TR in this article table.
-						switch(index) {
-
-								// No. Element. Rarity. Max lvl. Cost
-							case 1: 
-								$(this).find('td').each(function(index){
-									// Switch to handle each TD in the row.
-									// We use this to assign values to our JSON object
-									switch(index) {
-
-											// Character ID
-										case 0:
-											json.character_id = parseInt($(this).text());
-											break;
-
-											// Element Type
-										case 1:
-											json.element = $(this).text().trim();
-											break;
-
-											// Rarity (count characters, convert to int)
-										case 2:
-											json.rarity = $(this).text().trim().length;
-											break;
-
-											// Max Level
-										case 3:
-											json.max_lvl = parseInt($(this).text());
-											break;
-
-											// Cost
-										case 4:
-											json.cost = parseInt($(this).text());
-											break;
-
-
-									}
-								});
-								break;
-
-								// Lord HP, Lord ATK, Lord DEF, Lord REC
-							case 5:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// HP
-										case 1:
-											json.hp_lord = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// ATK
-										case 2:
-											json.atk_lord = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// DEF
-										case 3:
-											json.def_lord = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// REC
-										case 4:
-											json.rec_lord = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-									}
-								});
-								break;
-
-								// Anima HP, ATK, DEF, REC
-							case 6:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// HP
-										case 1:
-											console.log(parseInt($(this).text().replace(/\,/g, '')));
-											json.hp_anima = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// ATK
-										case 2:
-											json.atk_anima = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// DEF
-										case 3:
-											json.def_anima = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// REC
-										case 4:
-											json.rec_anima = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-									}
-								});
-								break;
-
-								// Breaker HP, Lord ATK, Lord DEF, Lord REC
-							case 7:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// HP
-										case 1:
-											json.hp_breaker = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// ATK
-										case 2:
-											json.atk_breaker = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// DEF
-										case 3:
-											json.def_breaker = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// REC
-										case 4:
-											json.rec_breaker = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-									}
-								});
-								break;
-
-								// Guardian HP, Lord ATK, Lord DEF, Lord REC
-							case 8:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// HP
-										case 1:
-											json.hp_guardian = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// ATK
-										case 2:
-											json.atk_guardian = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// DEF
-										case 3:
-											json.def_guardian = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// REC
-										case 4:
-											json.rec_guardian = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-									}
-								});
-								break;
-
-								// Oracle HP, Lord ATK, Lord DEF, Lord REC
-							case 9:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// HP
-										case 1:
-											json.hp_oracle = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// ATK
-										case 2:
-											json.atk_oracle = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// DEF
-										case 3:
-											json.def_oracle = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-											// REC
-										case 4:
-											json.rec_oracle = parseInt($(this).text().replace(/\,/g, ''));
-											break;
-									}
-								});
-								break;
-
-								// Leader Skill Name
-							case 12:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// Leader Skill Name
-										case 0:
-											json.leader_skill_name = justText($(this));
-											break;
-
-									}
-								});
-								break;
-
-								// Leader Skill
-							case 13:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// Leader Skill
-										case 0:
-											//var leader_skill_data = justText($(this));
-											//console.log(leader_skill_data);
-											json.leader_skill = justText($(this));
-											break;
-
-									}
-								});
-								break;
-
-								// BB Skill Name
-							case 15:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// Leader Skill
-										case 0:
-											json.bb_skill_name = justText($(this));
-											break;
-
-									}
-								});
-								break;
-
-								// BB Skill
-							case 16:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// BB Skill
-										case 0:
-											json.bb_skill = justText($(this), 'bb');
-											break;
-
-									}
-								});
-								break;
-
-								// SBB Skill Name
-							case 18:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// BB Skill
-										case 0:
-											json.sbb_skill_name = justText($(this));
-											break;
-
-									}
-								});
-								break;
-
-								// SBB Skill 
-							case 19:
-								$(this).find('td').each(function(index) {
-									switch(index) {
-
-											// BB Skill
-										case 0:
-											json.sbb_skill = justText($(this), 'sbb');
-											break;
-
-									}
-								});
-								break;
-
-
-
-
-
-
-
-						}
-						//var array = td.text();
-						//console.log(array);
-
-						//console.log(index + ' is the row index');
-						//console.log(tr.children().first().text());
-
-						//console.log(cell);
-						//console.log(data.children().first().parseInt(data.innerHTML()));
-
-					});
-
-					//console.log(index);
-
-
+				if (index > 1) {
+					if ($(this).children().first().attr('scope') && $(this).children().first().text().trim() !== 'General Zone Details') {
+						$(this).addClass('level');
+						//console.log($($table).html());
+					}
 				}
+				if (index === count -1) {
+
+					json.total_levels = $('.level').length;
+
+					// We have all the levels. Lets add them to our JSON
+					$table.find('.level').each(function(index){
+
+						// Store index so we can reference it when we create object properties
+						var level_index = index;
+						// Monsters column
+						var $monsters = $(this).next().find('td').eq(0);
+						// Notes column
+						var $notes = $(this).next().find('td').eq(1);
+
+						// Rare Captures
+						var $rare_captures = $(this).next().find('td').eq(2);
+						//console.log($notes.html());
+
+						//console.log($details.html());
+
+						// Level Schema
+						json.levels[index] = { 
+							name: $(this).children().eq(0).text().trim(), 
+							energy: parseInt($(this).children().eq(1).text().trim()), 
+							battles: parseInt($(this).children().eq(2).text().trim()), 
+							exp: parseInt($(this).children().eq(3).text().trim()), 
+							ratio: parseInt($(this).children().eq(4).text().trim()),
+						};
+						json.levels[index]['monsters'] = {};
+						json.levels[index]['notes'] = {};
+						json.levels[index]['rare_captures'] = {};
+						json.levels[index]['drops'] = {};
+
+						//console.log(json.levels);
+
+						// Assign monster data to the object
+						$monsters.find('b').each(function(index) {
+							console.log($(this).next().html());
+							json.levels[level_index]['monsters'][index] = {
+								name: $(this).text().trim(),
+								hp: parseInt($(this).next().text().trim().replace(/[^\d\.]/gi, ""), 10),
+							};
+						});
+
+						// Assign notes data to the object
+						$notes.find('p').each(function(index){
+							if ($(this).text().trim() === 'Notes:') {
+								//json.levels[level_index]['notes'][index] = $(this).text().trim();
+																$(this).next('ul').find('li').each(function(index){
+									json.levels[level_index]['notes'][index] = $(this).text().trim();
+								});
+							} else if ($(this).text().trim() === 'Drops:') {
+								$(this).next('ul').find('li').each(function(index){
+									json.levels[level_index]['drops'][index] = $(this).text().trim();
+								});
+							}
+						});
+
+						// Assign drops data to the object
+						//						$notes.find('ul').eq(1).find('li').each(function(index){
+						//							json.levels[level_index]['drops'][index] = $(this).text().trim();
+						//						});
+
+						// Assign rare captures data to the object
+						$rare_captures.find('b').each(function(index) {
+							json.levels[level_index]['rare_captures'][index] = {
+								name: $(this).text().trim(),
+								odds: parseInt($(this).next().text().trim().match(/\d+/)),
+							};
+						});
+
+
+
+
+
+						// Monsters
+						//					var monsters = [];
+						//					//console.log($details.first('td').find('div b').text());
+						//						
+						//					json.levels[index]['monsters'] = {
+						//						names: $details.first('td').find('div b').first().text(),
+						//					};
+
+						//						$(this).children().each(function(index){
+						//							//console.log(index);
+						//
+						//							switch(index) {
+						//								case 0:
+						//									json.levels[index].name = $(this).text().trim();
+						//									
+						//									//console.log($(this).html());
+						//									break;
+						//								case 1:
+						//											json.levels[index].name = $(this).text().trim();
+						//									break;
+						//								case 2:
+						//											json.levels[index].name = $(this).text().trim();
+						//									break;
+						//								case 3:
+						//											json.levels[index].name = $(this).text().trim();
+						//									break;
+						//
+						//							}
+						//							//console.log($(this).text());
+						//						});
+
+
+
+
+
+
+
+						//console.log($(this).html());
+					});	
+				}
+
 			});
 
+			//console.log($table.find('.level').html());
 
-			//$('.wiki-table').filter(function(){
-			//var data = $(this);
+			//console.log($table.find('th').first().html());
 
 
-			//console.log(data);
-			////title = data.children().first().text();
-			////release = data.children().last().children().text();
-
-			////json.title = title;
-			////json.release = release;
-			//})
-
-			$('.star-box-giga-star').filter(function(){
-				//var data = $(this);
-				//rating = data.text();
-
-				//json.rating = rating;
-			});
 		}
 
-		fs.writeFile('output.json', JSON.stringify(json, null, 4), function(err){
+		fs.writeFile('output-quests.json', JSON.stringify(json, null, 4), function(err){
 			console.log('File successfully written! - Check your project directory for the output.json file');
 		})
 
-		res.send('Check your console!')
+		res.send(html)
 	})
+
 })
 
 app.listen('8081')
