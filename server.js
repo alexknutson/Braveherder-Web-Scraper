@@ -66,7 +66,7 @@ app.get('/scrapeQuests', function(req, res){
 	var urlBuilder = function(world, quest)	{
 		return 'http://bravefrontierglobal.wikia.com/wiki/' + world + ':' + quest + '?action=render';
 	}
-	
+
 	//urls.push(urlBuilder(world, type));
 	total_counter = 0;
 
@@ -91,8 +91,7 @@ app.get('/scrapeQuests', function(req, res){
 					var $ = cheerio.load(html);
 
 					// Stats Header
-					var json = { name: "", levels: {} };
-
+					var json = { name: "", levels: {}, general_monsters: {}, general_drops: {} };
 					// We store the article table.
 					var $table = $('.article-table');
 
@@ -130,12 +129,14 @@ app.get('/scrapeQuests', function(req, res){
 								var $monsters = $(this).next().find('td').eq(0);
 								// Notes column
 								var $notes = $(this).next().find('td').eq(1);
-
 								// Rare Captures
 								var $rare_captures = $(this).next().find('td').eq(2);
-								//console.log($notes.html());
 
-								//console.log($details.html());
+								// General Zone Monsters
+								var $general_monsters = $table.find(':contains(Monsters:)').next();
+								// General Zone Drops
+								var $general_drops = $table.children().last().find(':contains(Drops:)').next();
+
 
 								// Level Schema
 								json.levels[index] = { 
@@ -182,6 +183,15 @@ app.get('/scrapeQuests', function(req, res){
 										odds: parseInt($(this).next().text().trim().match(/\d+/)),
 									};
 								});
+								// Assign General Monster Details to the object
+								$general_monsters.find('a').each(function(index){ 
+									json.general_monsters[index] = $(this).text().trim();
+								});
+
+								// Assign General Drops Details to the object
+								$general_drops.find('a').each(function(index){
+									json.general_drops[index] = $(this).text().trim();
+								});
 							});	
 						}
 
@@ -203,7 +213,7 @@ app.get('/scrapeQuests', function(req, res){
 
 
 	// Single quest
-//	url = 'http://bravefrontierglobal.wikia.com/wiki/Mirvana:Earth?action=render';
+	//url = 'http://bravefrontierglobal.wikia.com/wiki/Mistral:Earth?action=render';
 //	request(url, function(error, response, html){
 //		//console.log(response);
 //		if(!error){
@@ -212,7 +222,7 @@ app.get('/scrapeQuests', function(req, res){
 //			var $ = cheerio.load(html);
 //
 //			// Stats Header
-//			var json = { name: "", levels: {} };
+//			var json = { name: "", levels: {}, general_monsters: {}, general_drops: {} };
 //
 //			// We store the article table.
 //			var $table = $('.article-table');
@@ -251,12 +261,14 @@ app.get('/scrapeQuests', function(req, res){
 //						var $monsters = $(this).next().find('td').eq(0);
 //						// Notes column
 //						var $notes = $(this).next().find('td').eq(1);
-//
 //						// Rare Captures
 //						var $rare_captures = $(this).next().find('td').eq(2);
-//						//console.log($notes.html());
+//						// General Zone Monsters
+//						var $general_monsters = $table.find(':contains(Monsters:)').next();
+//						// General Zone Drops
+//						var $general_drops = $table.children().last().find(':contains(Drops:)').next();
 //
-//						//console.log($details.html());
+//						console.log($general_drops.html());
 //
 //						// Level Schema
 //						json.levels[index] = { 
@@ -303,6 +315,17 @@ app.get('/scrapeQuests', function(req, res){
 //								odds: parseInt($(this).next().text().trim().match(/\d+/)),
 //							};
 //						});
+//
+//						// Assign General Monster Details to the object
+//						$general_monsters.find('a').each(function(index){ 
+//							json.general_monsters[index] = $(this).text().trim();
+//						});
+//
+//						// Assign General Drops Details to the object
+//						$general_drops.find('a').each(function(index){
+//							json.general_drops[index] = $(this).text().trim();
+//						});
+//
 //					});	
 //				}
 //
