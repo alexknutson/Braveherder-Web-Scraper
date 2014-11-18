@@ -91,7 +91,7 @@ app.get('/scrapeQuests', function(req, res){
 					var $ = cheerio.load(html);
 
 					// Stats Header
-					var json = { name: "", levels: {}, general_monsters: {}, general_drops: {} };
+					var json = { world: world, type: type, name: "", levels: {}, general_monsters: {}, general_drops: {} };
 					// We store the article table.
 					var $table = $('.article-table');
 
@@ -199,7 +199,7 @@ app.get('/scrapeQuests', function(req, res){
 				}
 				if (url_validated == true) {
 					var random = Math.floor((Math.random() * 1000) + 1);;
-					fs.writeFile('world/' + random + '.json', JSON.stringify(json, null, 4), function(err){
+					fs.writeFile('world/' + world + '-' + type + '.json', JSON.stringify(json, null, 4), function(err){
 						console.log('File successfully written! - Check your project directory for the output.json file');
 						//total_counter++;
 					})
