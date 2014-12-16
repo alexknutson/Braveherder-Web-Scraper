@@ -19,26 +19,9 @@ app.get('/scrapeUnits', function(req, res){
 				unit_group_list.push($(this).find('a').attr('href'));
 			});
 
-			var unit_href_list = [];
+			unit_group_list.forEach(fetchAllUnits);
+			//console.log(unit_group_list);
 
-			console.log(unit_group_list);
-
-			request('http://bravefrontierglobal.wikia.com/wiki/Unit_List:0:Data?action=render', function(error, response, html){
-				//console.log(response);
-				if(!error){
-					var $ = cheerio.load(html);
-					$('td').each(function () {
-						var found_unit = $(this).find('a').first().attr('href');
-						if (typeof found_unit !== "undefined") {
-							unit_href_list.push(found_unit);
-						}
-					});
-					//console.log(unit_href_list);
-					unit_href_list.forEach (fetchUnitsFromGroup);
-
-					res.send($.html())
-				}
-			});
 
 			//res.send($.html())
 		}
@@ -106,8 +89,10 @@ app.get('/scrapeUnits', function(req, res){
 
 							// Icon
 							var iconURL = $('a[title="' + json.name + '"]').find('img').first().attr('data-src');
-							json.icon = iconURL.substring(0, imageURL.indexOf('?')).replace('/revision/latest', '');
-							console.log(json.icon);
+							if (typeof iconURL !== "undefined") {
+								json.icon = iconURL.substring(0, imageURL.indexOf('?')).replace('/revision/latest', '');
+							}
+							//console.log(json.icon);
 							//json.icon = $(icon).find('img').attr('src');
 							//console.log(json.icon);
 
@@ -207,7 +192,27 @@ app.get('/scrapeUnits', function(req, res){
 
 	}
 
+	function fetchAllUnits(value) {
 
+				request(value, function(error, response, html){
+				//console.log(response);
+				if(!error){
+					var unit_href_list = [];
+
+					var $ = cheerio.load(html);
+					$('td').each(function () {
+						var found_unit = $(this).find('a').first().attr('href');
+						if (typeof found_unit !== "undefined") {
+							unit_href_list.push(found_unit);
+						}
+					});
+					//console.log(unit_href_list);
+					unit_href_list.forEach (fetchUnitsFromGroup);
+
+					//res.send($.html())
+				}
+			});
+	}
 
 
 
