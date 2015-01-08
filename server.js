@@ -196,7 +196,7 @@ app.get('/scrapeUnits', function(req, res){
 	function fetchAllUnits(value) {
 
 				request(value, function(error, response, html){
-				//console.log(response);
+
 				if(!error){
 					var unit_href_list = [];
 
@@ -207,7 +207,7 @@ app.get('/scrapeUnits', function(req, res){
 							unit_href_list.push(found_unit);
 						}
 					});
-					//console.log(unit_href_list);
+
 					unit_href_list.forEach (fetchUnitsFromGroup);
 
 					//res.send($.html())
